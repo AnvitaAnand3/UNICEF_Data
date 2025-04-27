@@ -1,0 +1,76 @@
+
+/* custom.css - Flat with Border Box */
+
+/* Full page background */
+html, body {
+    background-color: #f9fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    color: #333333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+/* Main content area with border box */
+main, section, article {
+    background-color: white;
+    padding: 30px;
+    border: 1px solid #dddddd; /* Simple thin border */
+    border-radius: 8px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    color: #222222;
+    font-weight: bold;
+}
+
+/* Paragraph text */
+p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+/* Code blocks */
+pre, code {
+    background-color: #f3f3f3;
+    padding: 8px;
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+}
+
+/* Tables */
+table {
+    background-color: white;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+/* Plot containers */
+.plotly-graph-div {
+    background-color: white;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+/* TOC Styling */
+nav.toc {
+    background-color: #f0f4f8;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+nav.toc a {
+    color: #204080;
+    font-weight: 600;
+}

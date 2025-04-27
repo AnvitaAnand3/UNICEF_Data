@@ -1,0 +1,249 @@
+---
+title: "Global Patterns of Mortality Among Children (5–14 Years)"
+author: "Anvita Anand"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+    toc: true
+    css: custom.css
+editor: visual
+---
+
+## BAA1030 Data Analytics & Story Telling
+
+Student Name: Anvita Anand  
+Student Number: 47726  
+Program: MSc Management Strategy
+
+## Executive Summary
+
+This report analyzes global mortality patterns among children aged 5–14 years using UNICEF data. Various visualizations highlight the countries and trends with the highest death rates. By examining this data, we aim to identify areas that require urgent healthcare improvements and suggest focus areas for policy interventions.
+
+## Introduction
+
+Child mortality remains a significant issue globally, especially in low- and middle-income countries. This report focuses on the mortality of children aged 5 to 14 years across different countries. Using observed death rates, we explore trends, identify top-affected nations, and visualize disparities requiring urgent attention from healthcare systems.
+
+## Data Preparation
+
+```{python}
+import polars as pl
+
+indicator = pl.read_csv("/Users/abhi/Desktop/Anvita_Final_Quarto/unicef_indicator_2_Anvi.csv")
+meta = pl.read_csv("/Users/abhi/Desktop/Anvita_Final_Quarto/unicef_metadata_Anvi.csv")
+
+df = indicator.filter(pl.col("indicator") == "Deaths (children aged 5-14)")
+df = df.join(meta, on="country", how="left")
+```
+
+## Visualization 1: Globe Highlighting Top 10 Countries
+
+```{python}
+import plotly.graph_objects as go
+import pandas as pd
+
+data = df.to_pandas()
+grouped = data.groupby('country', as_index=False).agg({'obs_value': 'max'})
+top10 = grouped.nlargest(10, 'obs_value')
+
+fig = go.Figure(go.Choropleth(
+    locations=top10['country'],
+    locationmode='country names',
+    z=top10['obs_value'],
+    colorscale='YlOrBr',
+    colorbar_title='Death Rates (Aged 5–14)',
+    marker_line_color='black',
+    marker_line_width=0.5,
+    text=top10['country'],
+    hovertemplate='<b>%{text}</b><br>Deaths (Age 5–14): %{z}<extra></extra>'
+))
+
+fig.update_layout(
+    title_text='Top 10 Unique Countries: Children (5–14) Mortality',
+    geo=dict(
+        projection_type='orthographic',
+        showland=True,
+        landcolor="white",
+        showocean=True,
+        oceancolor="lightblue",
+        showlakes=True,
+        lakecolor="lightblue",
+        showcountries=True,
+        countrycolor="black",
+        projection_rotation=dict(lon=0, lat=0, roll=0)
+    ),
+    margin={"r":0,"t":50,"l":0,"b":0}
+)
+
+fig.show()
+```
+
+**This globe highlights the top 10 countries with the highest observed deaths among children aged 5–14 years.**
+
+## Visualization 2: Horizontal Bar Chart - Top 10 Countries
+
+```{python}
+from plotnine import *
+
+df_pd = df.to_pandas()
+agg_df = df_pd.groupby("country", as_index=False).agg({"obs_value": "sum"})
+top10_df = agg_df.sort_values("obs_value", ascending=False).head(10)
+
+bar_plot = (
+    ggplot(top10_df)
+    + aes(x='reorder(country, obs_value)', y='obs_value')
+    + geom_bar(stat='identity', width=0.7, fill='steelblue')
+    + coord_flip()
+    + ggtitle("Top 10 Countries by Total Observed Deaths (Age 5–14)")
+    + labs(x='Country', y='Deaths')
+    + theme_minimal()
+    + theme(
+        axis_title=element_text(size=12, weight='bold'),
+        axis_text=element_text(size=10),
+        plot_title=element_text(size=14, weight='bold')
+    )
+)
+bar_plot
+```
+
+**This horizontal bar chart shows the top 10 countries based on the highest number of deaths.**
+
+## Visualization 3: Scatter Plot with Trend Line
+
+```{python}
+from plotnine import ggplot, aes, geom_point, geom_smooth, ggtitle, theme_minimal, labs, theme, element_text
+
+plot = (
+    ggplot(df_pd)
+    + aes(x="Year", y="obs_value")
+    + geom_point(color="steelblue", size=3, alpha=0.7)
+    + geom_smooth(method="lm", color="darkred", fill="salmon", alpha=0.3)
+    + ggtitle("Trend of Child Mortality Over Time (Age 5–14)")
+    + labs(x="Year", y="Deaths")
+    + theme_minimal()
+    + theme(
+        axis_title=element_text(size=12, weight='bold'),
+        plot_title=element_text(size=14, weight='bold', ha='center'),
+        axis_text=element_text(size=10)
+    )
+)
+plot
+```
+
+**This scatter plot shows the trend of mortality over time for children aged 5–14 years.**
+
+## Visualization 4: Time Series for Top 10 Countries
+
+```{python}
+data = df.to_pandas()
+top_countries = data.groupby('country')['obs_value'].mean().sort_values(ascending=False).head(10).index
+filtered_data = data[data['country'].isin(top_countries)]
+
+plot = (
+    ggplot(filtered_data)
+    + aes(x='Year', y='obs_value', group='country', color='country')
+    + geom_line()
+    + ggtitle("Time Series of Top 10 Countries by Average Deaths (Age 5–14)")
+    + labs(x='Year', y='Deaths')
+    + theme_minimal()
+)
+plot
+```
+
+**This line chart displays the mortality trends for the top 10 countries across years.**
+
+## Visualization 5: Treemap of Top 20 Countries
+
+```{python}
+import plotly.express as px
+
+grouped = df_pd.groupby('country', as_index=False).agg({'obs_value': 'max'})
+top20 = grouped.nlargest(20, 'obs_value')
+
+fig = px.treemap(
+    top20,
+    path=['country'],
+    values='obs_value',
+    color='obs_value',
+    color_continuous_scale='YlOrBr',
+    title="Treemap: Top 20 Countries by Deaths (Age 5–14)"
+)
+
+fig.update_layout(
+    coloraxis_colorbar_title='Deaths (Age 5–14)',
+    paper_bgcolor='mintcream',
+    plot_bgcolor='whitesmoke'
+)
+fig.show()
+```
+
+**This treemap highlights the 20 countries with the highest observed deaths among children aged 5–14 years.**
+
+## Visualization 6: Sunburst Chart - Country → Year Breakdown
+
+```{python}
+import plotly.express as px
+
+# Group by country and year
+grouped = df_pd.groupby(['country', 'Year'], as_index=False).agg({'obs_value': 'sum'})
+
+# Select top 20 countries
+top_countries = (
+    grouped.groupby('country')['obs_value']
+    .sum()
+    .sort_values(ascending=False)
+    .head(20)
+    .index
+)
+
+# Filter only top 20 countries
+filtered_grouped = grouped[grouped['country'].isin(top_countries)].copy()
+
+# Custom hover text
+filtered_grouped['hover_info'] = (
+    'Country: ' + filtered_grouped['country'] +
+    '<br>Year: ' + filtered_grouped['Year'].astype(str) +
+    '<br>Deaths (Age 5–14): ' + filtered_grouped['obs_value'].round(0).astype(str)
+)
+
+# Create the Sunburst Chart
+fig = px.sunburst(
+    filtered_grouped,
+    path=['country', 'Year'],   # 👈 Country ➔ Year
+    values='obs_value',
+    color='obs_value',
+    color_continuous_scale=px.colors.sequential.Pinkyl,  # 👈 Pink color gradient
+    title='🌸 Sunburst Chart: Top 20 Countries ➔ Year ➔ Child Mortality (Age 5–14)',
+    hover_data={'hover_info': True}
+)
+
+# Update layout
+fig.update_layout(
+    title_x=0.5,
+    title_font_size=24,
+    title_font_family="Arial",
+    margin=dict(t=60, l=30, r=30, b=30),
+    paper_bgcolor='whitesmoke',
+    plot_bgcolor='whitesmoke',
+    coloraxis_colorbar_title='Deaths (Age 5–14)',
+    font=dict(family="Arial", size=14)
+)
+
+# Update traces
+fig.update_traces(
+    hovertemplate='%{customdata[0]}<extra></extra>',
+    textinfo="label+percent entry",
+    insidetextorientation='radial'
+)
+
+fig.show()
+
+```
+
+**This sunburst chart shows the breakdown of deaths by country and year among the top 20 countries.**
+
+## Conclusion
+
+The report highlights serious disparities in child mortality rates across countries. Specific nations show persistently high death rates for children aged 5–14, calling for urgent healthcare policy reforms. Investing in better healthcare access and disease prevention strategies can significantly reduce preventable child deaths worldwide.
+
